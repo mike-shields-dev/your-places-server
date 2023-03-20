@@ -1,7 +1,13 @@
 import express from 'express';
-import { getPlaceByPlaceId, getPlacesByUserId } from '../../controllers/places/controller.js';
+import {
+    getPlaceByPlaceId,
+    getPlacesByUserId,
+    createPlace,
+} from '../../controllers/places/controller.js';
 
 const router = express.Router();
+
+router.post('/', createPlace);
 
 router.get('/:pid', getPlaceByPlaceId);
 

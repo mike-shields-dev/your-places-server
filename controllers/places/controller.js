@@ -1,6 +1,26 @@
 import { HttpError, errorMsg } from '../../models/http-error.js';
 import data from './places-data.json' assert { type: "json" };
-import HttpError from '../../models/http-error.js';
+import { v4 as uuid } from 'uuid';
+
+const createPlace = (req, res, next) => {
+    const {
+        title,
+        description, 
+        coordinates, 
+        address, 
+        creator, 
+    } = req.body;
+
+    const newPlace = {
+        id: uuid(),
+        title,
+        description,
+        location: coordinates,
+        address,
+        creator,
+    };
+
+    data.push(newPlace);
 
     res.status(201).json({ place: newPlace });
 };
