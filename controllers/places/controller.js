@@ -48,4 +48,23 @@ const getPlacesByUserId = (req, res, next) => {
 }
 
 
-export { getPlaceByPlaceId, getPlacesByUserId };
+
+const deletePlaceByPlaceId = (req, res, next) => {
+    const { pid } = req.params;
+
+    const place = data.find(place => place.id === pid)
+
+    if (!place) {
+        return next(new HttpError(errorMsg('place', 'place'), 404));
+    }
+
+    data = data.filter(place => place.id !== pid);
+
+    return res.status(204);  
+};
+
+
+export {
+    createPlace,
+    deletePlaceByPlaceId,
+};
