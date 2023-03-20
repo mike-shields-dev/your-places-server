@@ -28,6 +28,9 @@ const USERS = [
     },
 ];
 
+const errorMsg = (resource, idType) =>
+    `No ${resource} found for the provided ${idType} ID.`; 
+
 router.get('/:uid', (req, res) => {
     const foundUser =
         USERS.find(({ id }) => id === req.params.uid);
@@ -36,9 +39,10 @@ router.get('/:uid', (req, res) => {
         return res.json(foundUser);
     }
 
-    return res
-        .status(404)
-        .json({ message: 'User not found' });
+    const error = new Error(errorMsg('user', 'user'))
+    error.code = 404;
+    
+    next(error);
 });
 
 export default router;

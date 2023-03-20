@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 
+
 const PLACES = [
     {
         id: 'place0',
@@ -28,30 +29,35 @@ const PLACES = [
     },
 ];
 
-router.get('/:pid', (req, res) => {
-    const foundPlace =
+const errorMsg = (resource, idType) =>
+    `No ${resource} found for the provided ${idType} ID.`; 
+
+router.get('/:pid', (req, res, next) => {
+    const place =
         PLACES.find(({ id }) => id === req.params.pid);
 
-    if (foundPlace) {
-        return res.json(foundPlace);
+    if (place) {
+        return res.json(place);
     }
 
-    return res
-        .status(404)
-        .json({ message: 'No place found' });
+    const error = new Error(errorMsg('place', 'place'))
+    error.code = 404;
+    
+    next(error);
 });
 
-router.get('/user/:uid', (req, res) => {
-    const foundPlace =
-        PLACES.find(({ creator }) => creator === req.params.uid);
+router.get('/user/:uid', (req, res, next) => {
+    const places =
+        PLACES.filter(({ creator }) => creator === req.params.uid);
 
-    if (foundPlace) {
-        return res.json(foundPlace);
+    if (places.length) {
+        return res.json(places);
     }
 
-    return res
-        .status(404)
-        .json({ message: 'No place found' });
+    const error = new Error(errorMsg('place', 'user'));
+    error.code = 404;
+    
+    next(error);
 });
 
 
