@@ -3,6 +3,7 @@ import {
     getPlaceByPlaceId,
     getPlacesByUserId,
     createPlace,
+    updatePlaceByPlaceId,
     deletePlaceByPlaceId,
 } from '../../controllers/places/controller.js';
 
@@ -14,7 +15,8 @@ router.get('/:pid', getPlaceByPlaceId);
 
 router.get('/user/:uid', getPlacesByUserId);
 
-router.delete('/:pid', deletePlaceByPlaceId);
+router.patch('/:pid', updatePlaceByPlaceId);
 
+router.delete('/:pid', deletePlaceByPlaceId);
 
 export default router;

@@ -47,11 +47,28 @@ const getPlacesByUserId = (req, res, next) => {
     next(new HttpError(errorMsg('places', 'user'), 404));
 }
 
+const updatePlaceByPlaceId = (req, res, next) => {
+    const { pid } = req.params;
+    const { title, description } = req.body;
+    const foundIndex = data.findIndex(({ id }) => id === pid)
 
+    if (foundIndex < 0) {
+        return next(new HttpError(errorMsg('place', 'place'), 404));    
+    }
+
+    data[foundIndex] = {
+        ...data[foundIndex],
+        title,
+        description,
+    };
+
+    return res
+        .status(200)
+        .json({ place: data[foundIndex] });
+};
 
 const deletePlaceByPlaceId = (req, res, next) => {
     const { pid } = req.params;
-
     const place = data.find(place => place.id === pid)
 
     if (!place) {
@@ -63,8 +80,10 @@ const deletePlaceByPlaceId = (req, res, next) => {
     return res.status(204);  
 };
 
-
 export {
     createPlace,
+    getPlaceByPlaceId,
+    getPlacesByUserId,
+    updatePlaceByPlaceId, 
     deletePlaceByPlaceId,
 };
