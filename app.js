@@ -10,7 +10,7 @@ import usersRoute from './routes/users/route.js';
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use('/api/places', placesRoute);
 app.use('/api/users', usersRoute);
