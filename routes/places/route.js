@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 const PLACES = [
@@ -41,4 +41,4 @@ router.get('/:pid', (req, res) => {
         .json({ message: 'No place found' });
 });
 
-module.exports = router;
+export default router;
