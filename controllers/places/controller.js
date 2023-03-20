@@ -42,7 +42,7 @@ const getPlacesByUserId = (req, res, next) => {
     const usersPlaces =
         places.filter(({ creator }) => creator === req.params.uid);
 
-    if (usersPlaces.length) {
+    if (usersPlaces.length > 0) {
         return res.json(usersPlaces);
     }
     
