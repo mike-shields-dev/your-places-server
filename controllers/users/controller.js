@@ -1,8 +1,5 @@
-import HttpError from '../../models/http-error.js';
+import { HttpError, errorMsg } from '../../models/http-error.js';
 import data from './users-data.json' assert { type: "json" };
-
-const errorMsg = (resource, idType) =>
-    `No ${resource} found for the provided ${idType} ID.`; 
 
 const getUserById = (req, res, next) => {
     const foundUser =

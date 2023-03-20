@@ -1,8 +1,9 @@
+import { HttpError, errorMsg } from '../../models/http-error.js';
 import data from './places-data.json' assert { type: "json" };
 import HttpError from '../../models/http-error.js';
 
-const errorMsg = (resource, idType) =>
-    `No ${resource} found for the provided ${idType} ID.`; 
+    res.status(201).json({ place: newPlace });
+};
 
 const getPlaceByPlaceId = (req, res, next) => {
     const place =
@@ -23,7 +24,8 @@ const getPlacesByUserId = (req, res, next) => {
         return res.json(places);
     }
     
-    next(new HttpError(errorMsg('place', 'user'), 404));
+    next(new HttpError(errorMsg('places', 'user'), 404));
 }
+
 
 export { getPlaceByPlaceId, getPlacesByUserId };

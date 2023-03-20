@@ -5,4 +5,7 @@ class HttpError extends Error{
     }
 }
 
-export default HttpError;
+const errorMsg = (resource, idType) =>
+    `No ${resource} found for the provided ${idType} ID.`; 
+
+export { HttpError, errorMsg };
