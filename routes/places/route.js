@@ -12,7 +12,7 @@ const PLACES = [
             lat: 40.7484405,
             lng: -73.9878531,
         },
-        creator: 'user1',
+        creator: 'user0',
     },
     {
         id: 'place1',
@@ -40,5 +40,19 @@ router.get('/:pid', (req, res) => {
         .status(404)
         .json({ message: 'No place found' });
 });
+
+router.get('/user/:uid', (req, res) => {
+    const foundPlace =
+        PLACES.find(({ creator }) => creator === req.params.uid);
+
+    if (foundPlace) {
+        return res.json(foundPlace);
+    }
+
+    return res
+        .status(404)
+        .json({ message: 'No place found' });
+});
+
 
 export default router;
