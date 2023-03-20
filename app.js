@@ -4,6 +4,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
+import { HttpError } from './models/http-error.js';
+
 import placesRoute from './routes/places/route.js';
 import usersRoute from './routes/users/route.js';
 
@@ -14,6 +16,10 @@ app.use(bodyParser.json());
 
 app.use('/api/places', placesRoute);
 app.use('/api/users', usersRoute);
+
+app.use((req, res, next) => {
+    throw new HttpError('Could not find this route!', 404);
+});
 
 app.use((error, req, res, next) => {
     if (res.headerSent) {
