@@ -1,6 +1,7 @@
 import express from 'express';
-const router = express.Router();
+import HttpError from '../../models/http-error.js';
 
+const router = express.Router();
 
 const PLACES = [
     {
@@ -39,11 +40,8 @@ router.get('/:pid', (req, res, next) => {
     if (place) {
         return res.json(place);
     }
-
-    const error = new Error(errorMsg('place', 'place'))
-    error.code = 404;
     
-    next(error);
+    next(new HttpError(errorMsg('place', 'place'), 404));
 });
 
 router.get('/user/:uid', (req, res, next) => {
@@ -53,11 +51,8 @@ router.get('/user/:uid', (req, res, next) => {
     if (places.length) {
         return res.json(places);
     }
-
-    const error = new Error(errorMsg('place', 'user'));
-    error.code = 404;
     
-    next(error);
+    next(new HttpError(errorMsg('place', 'user'), 404));
 });
 
 
