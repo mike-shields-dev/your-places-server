@@ -5,46 +5,46 @@ import data from './users-data.json' assert { type: "json" };
 let users = [...data];
 
 const getAllUsers = (req, res, next) => {
-    res.status(200).json({ users });
-};
-
-const getUserById = (req, res, next) => {
-    const user =
-        data.find(({ id }) => id === req.params.uid);
-    
-    if (user) {
-        return res.json(user);
-    }
-    
-    next(new HttpError(errorMsg('user', 'user')));
+    res.json({ users });
 };
 
 const createUser = (req, res, next) => {
     const {
         name,
         email,
-        image,
+        password,
     } = req.body;
 
-    const existingUser = users.find(user => user.email === email);
+    const foundUser = users.find(user => user.email === email);
 
-    if (existingUser) {
-        // should send user to account recovery endpoint?
-        
-        return res.status(200).json({ message: 'Email already exists.'})
+    if (foundUser) {        
+        return res.status(200).json({
+            message: 'Email already exists.'
+        });
     }
 
     const newUser = {
         id: uuid(),
         name,
         email,
-        image,
-        places: [ 0 ],
+        password,
     };
 
     users.push(newUser);
 
-    res.sendStatus(201);
+    res.status(201).json({ user: newUser });
 };
 
-export { createUser, getAllUsers, getUserById };
+const loginUser = (req, res, next) => {
+    const { email, password } = req.body;
+
+    const foundUser = users.find(user => user.email === email);
+
+    if (!foundUser || foundUser.password !== password) {
+        throw new HttpError('Could not identify user.', 401);
+    }
+
+    res.json({ message: 'logged in' });
+};
+
+export { createUser, loginUser, getAllUsers };
