@@ -1,8 +1,8 @@
-
 import { config } from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import mongoose from 'mongoose';
 
 import { HttpError } from './models/http-error.js';
 
@@ -37,7 +37,19 @@ app.use((error, req, res, next) => {
         });
 });
 
-app.listen(
-    PORT,
-    () => console.log(`App is listening on ${PORT}`)
-);
+const USER = process.env.MONGODB_USER
+const PASSWORD = process.env.MONGODB_PASSWORD
+
+mongoose
+    .connect("mongodb+srv://cluster0.n5gfflr.mongodb.net/places?retryWrites=true&w=majority", {
+        user: USER,
+        pass: PASSWORD,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(
+        app.listen(
+            PORT, () => console.log(`App is listening on ${PORT}`)
+        )
+    )
+    .catch(err => console.log(err));
