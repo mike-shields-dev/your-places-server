@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 import { HttpError } from '../models/http-error.js';
 
 config();
-const API_KEY = process.env.GEO_API_KEY;
+const API_KEY = process.env.GOOGLE_GEO_API_KEY;
 
 const coordinatesFromAddress = async (address) => {
     const response = await axios.get(
