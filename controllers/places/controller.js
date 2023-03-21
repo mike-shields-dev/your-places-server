@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator';
-import { v4 as uuid } from 'uuid';
+import Place from '../../models/place.js';
 
 import { errorMsg, HttpError } from '../../models/http-error.js';
 import { coordinatesFromAddress } from '../../util/location.js';
@@ -16,15 +16,15 @@ const createPlace = async (req, res, next) => {
         return res.status(422).json({
             message: 'Invalid data provided.',
             details:
-            errors.map(({ param, msg }) => `${param} ${msg}`),
+                errors.map(({ param, msg }) => `${param} ${msg}`),
         });
     }
 
     const {
         title,
         description,
-        address, 
-        creator, 
+        address,
+        creator,
     } = req.body;
 
     let coordinates;
@@ -35,39 +35,68 @@ const createPlace = async (req, res, next) => {
         return next(error);
     }
 
-    const newPlace = {
-        id: uuid(),
+    const newPlace = new Place({
         title,
         description,
         location: coordinates,
-        address,
         creator,
-    };
+        address,
+        image: 'https://placehold.co/400',
+    });
 
-    places.push(newPlace);
+    try {
+
+        await newPlace.save();
+    
+    } catch (err) {
+        
+        return next(
+            new HttpError('Failed to save place, please try again.', 500)
+        );
+    }
 
     res.status(201).json({ place: newPlace });
 };
 
-const getPlaceByPlaceId = (req, res, next) => {
-    const place =
-        places.find(({ id }) => id === req.params.pid);
-
-    if (place) {
-        return res.json(place);
+const getPlaceByPlaceId = async (req, res, next) => {
+    let place;
+    
+    try {
+        place = await Place.findById(
+            req.params.pid
+        );
+            
+    } catch (err) {
+        return next(
+            new HttpError(
+                'Something went wrong with the database query.',
+                500
+            )
+        );
     }
     
-    next(new HttpError(errorMsg('place', 'place'), 404));
+    if (!place) {
+        return next(
+            new HttpError(
+                errorMsg('place', 'place'),
+                404
+            )
+        );
+    }
+
+    return res.json({
+        place: place.toObject({ getters: true })
+    });
 }
 
 const getPlacesByUserId = (req, res, next) => {
-    const usersPlaces =
+    const usersPlaces = 
         places.filter(({ creator }) => creator === req.params.uid);
 
     if (usersPlaces.length > 0) {
         return res.json(usersPlaces);
     }
-    
+
     next(new HttpError(errorMsg('places', 'user'), 404));
 }
 
@@ -79,7 +108,7 @@ const updatePlaceByPlaceId = (req, res, next) => {
         return res.status(422).json({
             message: 'Invalid data provided.',
             details:
-            errors.map(({ param, msg }) => `${param} ${msg}`),
+                errors.map(({ param, msg }) => `${param} ${msg}`),
         });
     }
 
@@ -88,7 +117,7 @@ const updatePlaceByPlaceId = (req, res, next) => {
     const foundIndex = places.findIndex(({ id }) => id === pid)
 
     if (foundIndex < 0) {
-        return next(new HttpError(errorMsg('place', 'place'), 404));    
+        return next(new HttpError(errorMsg('place', 'place'), 404));
     }
 
     places[foundIndex] = {
@@ -104,7 +133,7 @@ const updatePlaceByPlaceId = (req, res, next) => {
 
 const deletePlaceByPlaceId = (req, res, next) => {
     const { pid } = req.params;
-    
+
     const foundPlace = places.find(({ id }) => id === pid)
 
     if (!foundPlace) {
@@ -113,7 +142,7 @@ const deletePlaceByPlaceId = (req, res, next) => {
 
     places = places.filter(({ id }) => id !== pid);
 
-    return res.sendStatus(204);  
+    return res.sendStatus(204);
 };
 
 export {
@@ -123,4 +152,3 @@ export {
     updatePlaceByPlaceId,
     deletePlaceByPlaceId,
 };
-
