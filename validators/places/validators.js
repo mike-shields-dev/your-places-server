@@ -1,25 +1,14 @@
-import { check } from 'express-validator';
+import { checkHasMinLength, checkIsProvided } from "../utils.js";
 
-const checkIsProvided = field =>
-    check(field)
-        .not().isEmpty()
-        .withMessage('must be provided.');
-
-const checkHasMinLength = (field, length) =>
-    check(field)
-        .isLength({ min: length})
-        .withMessage(`must have minimum length ${length}.`);
-
-
-const createPlaceValidator = () => [
+const validateCreatePlace = () => [
     checkIsProvided('title'),
     checkHasMinLength('description', 5),
     checkIsProvided('address'),
 ];
 
-const updatePlaceValidator = () => [
+const validateUpdatePlace = () => [
     checkIsProvided('title'),
     checkHasMinLength('description', 5),
 ];
     
-export { createPlaceValidator, updatePlaceValidator };
+export { validateCreatePlace, validateUpdatePlace };

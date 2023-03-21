@@ -1,14 +1,27 @@
+import { validationResult } from 'express-validator';
 import { v4 as uuid } from 'uuid';
-import { HttpError, errorMsg } from '../../models/http-error.js';
+
+import { HttpError } from '../../models/http-error.js';
 import data from './users-data.json' assert { type: "json" };
 
-let users = [...data];
+let users = data;
 
 const getAllUsers = (req, res, next) => {
     res.json({ users });
 };
 
 const createUser = (req, res, next) => {
+    const { errors } = validationResult(req);
+
+    if (errors.length > 0) {
+
+        return res.status(422).json({
+            message: 'Invalid data provided.',
+            details:
+            errors.map(({ param, msg }) => `${param} ${msg}`),
+        });
+    }
+
     const {
         name,
         email,
@@ -36,6 +49,17 @@ const createUser = (req, res, next) => {
 };
 
 const loginUser = (req, res, next) => {
+    const { errors } = validationResult(req);
+
+    if (errors.length > 0) {
+
+        return res.status(422).json({
+            message: 'Invalid data provided.',
+            details:
+            errors.map(({ param, msg }) => `${param} ${msg}`),
+        });
+    }
+
     const { email, password } = req.body;
 
     const foundUser = users.find(user => user.email === email);

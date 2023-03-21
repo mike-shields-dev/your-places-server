@@ -1,28 +1,22 @@
 import express from 'express';
 
-import {
-    createPlaceValidator,
-    updatePlaceValidator
-} from '../../validators/places/validators.js';
+import { validateCreatePlace, validateUpdatePlace } from '../../validators/places/validators.js';
 
 
 import {
-    getPlaceByPlaceId,
-    getPlacesByUserId,
-    createPlace,
-    updatePlaceByPlaceId,
-    deletePlaceByPlaceId,
+    createPlace, deletePlaceByPlaceId, getPlaceByPlaceId,
+    getPlacesByUserId, updatePlaceByPlaceId
 } from '../../controllers/places/controller.js';
 
 const router = express.Router();
 
-router.post('/', createPlaceValidator(), createPlace);
+router.post('/', validateCreatePlace(), createPlace);
 
 router.get('/:pid', getPlaceByPlaceId);
 
 router.get('/user/:uid', getPlacesByUserId);
 
-router.patch('/:pid', updatePlaceValidator(), updatePlaceByPlaceId);
+router.patch('/:pid', validateUpdatePlace(), updatePlaceByPlaceId);
 
 router.delete('/:pid', deletePlaceByPlaceId);
 
