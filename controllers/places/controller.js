@@ -1,12 +1,14 @@
-import { v4 as uuid } from 'uuid';
 import { validationResult } from 'express-validator';
+import { v4 as uuid } from 'uuid';
 
-import { HttpError, errorMsg } from '../../models/http-error.js';
+import { errorMsg, HttpError } from '../../models/http-error.js';
+import { coordinatesFromAddress } from '../../util/location.js';
+
 import data from './places-data.json' assert { type: "json" };
 
 let places = data;
 
-const createPlace = (req, res) => {
+const createPlace = async (req, res, next) => {
     const { errors } = validationResult(req);
 
     if (errors.length > 0) {
@@ -20,11 +22,18 @@ const createPlace = (req, res) => {
 
     const {
         title,
-        description, 
-        coordinates, 
+        description,
         address, 
         creator, 
     } = req.body;
+
+    let coordinates;
+
+    try {
+        coordinates = await coordinatesFromAddress(address);
+    } catch (error) {
+        return next(error);
+    }
 
     const newPlace = {
         id: uuid(),
@@ -111,6 +120,7 @@ export {
     createPlace,
     getPlaceByPlaceId,
     getPlacesByUserId,
-    updatePlaceByPlaceId, 
+    updatePlaceByPlaceId,
     deletePlaceByPlaceId,
 };
+
