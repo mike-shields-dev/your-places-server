@@ -1,4 +1,11 @@
 import express from 'express';
+
+import {
+    createPlaceValidator,
+    updatePlaceValidator
+} from '../../validators/places/validators.js';
+
+
 import {
     getPlaceByPlaceId,
     getPlacesByUserId,
@@ -9,13 +16,13 @@ import {
 
 const router = express.Router();
 
-router.post('/', createPlace);
+router.post('/', createPlaceValidator(), createPlace);
 
 router.get('/:pid', getPlaceByPlaceId);
 
 router.get('/user/:uid', getPlacesByUserId);
 
-router.patch('/:pid', updatePlaceByPlaceId);
+router.patch('/:pid', updatePlaceValidator(), updatePlaceByPlaceId);
 
 router.delete('/:pid', deletePlaceByPlaceId);
 

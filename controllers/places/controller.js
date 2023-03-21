@@ -1,10 +1,23 @@
+import { v4 as uuid } from 'uuid';
+import { validationResult } from 'express-validator';
+
 import { HttpError, errorMsg } from '../../models/http-error.js';
 import data from './places-data.json' assert { type: "json" };
-import { v4 as uuid } from 'uuid';
 
 let places = data;
 
-const createPlace = (req, res, next) => {
+const createPlace = (req, res) => {
+    const { errors } = validationResult(req);
+
+    if (errors.length > 0) {
+
+        return res.status(422).json({
+            message: 'Invalid data provided.',
+            details:
+            errors.map(({ param, msg }) => `${param} ${msg}`),
+        });
+    }
+
     const {
         title,
         description, 
@@ -50,6 +63,17 @@ const getPlacesByUserId = (req, res, next) => {
 }
 
 const updatePlaceByPlaceId = (req, res, next) => {
+    const { errors } = validationResult(req);
+
+    if (errors.length > 0) {
+
+        return res.status(422).json({
+            message: 'Invalid data provided.',
+            details:
+            errors.map(({ param, msg }) => `${param} ${msg}`),
+        });
+    }
+
     const { pid } = req.params;
     const { title, description } = req.body;
     const foundIndex = places.findIndex(({ id }) => id === pid)
