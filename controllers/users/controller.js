@@ -1,5 +1,4 @@
 import { validationResult } from 'express-validator';
-import { v4 as uuid } from 'uuid';
 
 import User from '../../models/user.js';
 import { HttpError } from '../../models/http-error.js';
@@ -16,7 +15,7 @@ const getAllUsers = async (req, res, next) => {
         ));
     }
 
-    res.status(200).json({ users: allUsers.map(user.toObject({ getters: true }))});
+    res.status(200).json({ users: allUsers.map(user => user.toObject({ getters: true }))});
 };
 
 const createUser = async (req, res, next) => {
@@ -31,7 +30,24 @@ const createUser = async (req, res, next) => {
         });
     }
 
-    const newUser = new User(req.body);
+    const {
+        name, 
+        email,
+        password,
+        image,
+    } = req.body;
+
+    console.log(name);
+
+    const user = new User({
+        name, 
+        email, 
+        password,
+        image: image || 'https://api.multiavatar.com/Binx Bond.png',
+        places: [],
+    });
+
+    const newUser = new User(user);
 
     try {
         await newUser.save()
