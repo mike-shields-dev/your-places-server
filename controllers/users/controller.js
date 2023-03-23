@@ -3,12 +3,20 @@ import { v4 as uuid } from 'uuid';
 
 import User from '../../models/user.js';
 import { HttpError } from '../../models/http-error.js';
-import data from './users-data.json' assert { type: "json" };
 
-let users = data;
+const getAllUsers = async (req, res, next) => {
+    let allUsers;
+    
+    try {
+        allUsers = await User.find({}, '-password');
+    } catch (err) {
+        return next(new HttpError(
+            'Something went wrong, please try again.', 
+            500
+        ));
+    }
 
-const getAllUsers = (req, res, next) => {
-    res.json({ users });
+    res.status(200).json({ users: allUsers.map(user.toObject({ getters: true }))});
 };
 
 const createUser = async (req, res, next) => {
@@ -19,31 +27,44 @@ const createUser = async (req, res, next) => {
         return res.status(422).json({
             message: 'Invalid data provided.',
             details:
-            errors.map(({ param, msg }) => `${param} ${msg}`),
+                errors.map(({ param, msg }) => `${param} ${msg}`),
         });
     }
-    
+
     const newUser = new User(req.body);
 
     try {
         await newUser.save()
     } catch (error) {
         return next(new HttpError(
-            error.errors.email.message, 
+            error.errors.email.message,
             500
         ));
     }
 
-    res.status(201).json({ user: newUser });
+    res.status(201).json({ user: newUser.toObject({ getters: true })});
 };
 
-const loginUser = (req, res, next) => {
+const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
-    const foundUser = users.find(user => user.email === email);
+    let foundUser;
+
+    try {
+        foundUser = await User.findOne({ email });
+
+    } catch (error) {
+        return next(new HttpError(
+            'User not found, please register.'), 
+            500
+        );
+    }
 
     if (!foundUser || foundUser.password !== password) {
-        throw new HttpError('Could not identify user.', 401);
+        return next(new HttpError(
+            'Could not identify user.', 
+            401
+        ));
     }
 
     res.json({ message: 'logged in' });
