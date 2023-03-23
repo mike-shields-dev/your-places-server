@@ -1,5 +1,8 @@
 import { validationResult } from 'express-validator';
+import { startSession } from 'mongoose';
+
 import Place from '../../models/place.js';
+import User from '../../models/user.js';
 
 import { errorMsg, HttpError } from '../../models/http-error.js';
 import { coordinatesFromAddress } from '../../util/location.js';
@@ -23,11 +26,34 @@ const createPlace = async (req, res, next) => {
         creator,
     } = req.body;
 
+    let user;
+
+    try {
+        user = await User.findById(creator);
+
+    } catch (error) {
+
+        return next(new HttpError(
+            errorMsg('user', 'user'),
+            500
+        ));  
+    }
+
+    if(!user) {
+
+        return next(new HttpError(
+            errorMsg('user', 'user'), 
+            404
+        ));
+    }
+
     let coordinates;
 
     try {
         coordinates = await coordinatesFromAddress(address);
+
     } catch (error) {
+
         return next(error);
     }
 
@@ -35,23 +61,33 @@ const createPlace = async (req, res, next) => {
         title,
         description,
         location: coordinates,
-        creator,
+        creator, 
         address,
         image: 'https://placehold.co/400',
     });
 
     try {
+        const session = await startSession();
 
-        await newPlace.save();
-    
-    } catch (err) {
+        session.startTransaction();
+
+            await newPlace.save({session});
+            user.places.push(newPlace)
+            await user.updateOne({
+                places: user.places,
+            },
+            {session});
         
+        await session.commitTransaction();
+
+    } catch (err) {
+
         return next(
             new HttpError('Failed to save place, please try again.', 500)
         );
     }
 
-    res.status(201).json({ place: newPlace });
+    res.status(201).json({ place: newPlace.toObject({ getters: true })});
 };
 
 const getPlaceByPlaceId = async (req, res, next) => {
@@ -103,7 +139,9 @@ const getPlacesByUserId = async (req, res, next) => {
     }
 
     if (places?.length > 0) {
-        return res.json(places.map(place => place.toObject({ getters: true })));
+        return res.json(places.map(place => 
+            place.toObject({ getters: true })
+        ));
     }
 
     next(new HttpError(errorMsg('places', 'user'), 404));
@@ -165,12 +203,12 @@ const deletePlaceByPlaceId = async (req, res, next) => {
     let place;
 
     try {
-        place = await Place.findById(pid);
+        place = await Place.findById(pid).populate('creator');
 
     } catch (error) {
         return (next(new HttpError(
             'Something went wrong, please try again later.',
-            404,
+            500,
         )));        
     }
 
@@ -182,9 +220,19 @@ const deletePlaceByPlaceId = async (req, res, next) => {
     }
 
     try {
-        await Place.deleteOne({ id: place.id });
+        const session = await startSession();
+        
+            session.startTransaction()            
+            await Place.deleteOne({ _id: pid }, { session });
+            place.creator.places.pull(place);
+            await place.creator.updateOne({
+                places: place.creator.places,
+            });
+
+        await session.commitTransaction();
 
     } catch (error) {
+        console.log(error)
         return (next(new HttpError(
             'Something went wrong, please try again later.',
             404,
@@ -193,7 +241,7 @@ const deletePlaceByPlaceId = async (req, res, next) => {
 
     return res
         .status(200)
-        .json({ message: 'Place deleted' });
+        .json({ message: 'Place deleted.' });
 };
 
 export {

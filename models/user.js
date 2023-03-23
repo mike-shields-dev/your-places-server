@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
 async function isEmailTaken(email) {
     const user = await this.constructor.findOne({ email });
@@ -9,7 +9,7 @@ const userSchema = new Schema({
     name: { type: String, required: true },
     password: { type: String, required: true, minLength: 8 },
     image: { type: String, required: true },
-    places: { type: String, required: true },
+    places: [{ type: Types.ObjectId, required: true, ref: 'Place' }],
     email: {
         type: String,
         validate: {
