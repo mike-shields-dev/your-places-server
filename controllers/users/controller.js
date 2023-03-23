@@ -1,6 +1,7 @@
 import { validationResult } from 'express-validator';
 import { v4 as uuid } from 'uuid';
 
+import User from '../../models/user.js';
 import { HttpError } from '../../models/http-error.js';
 import data from './users-data.json' assert { type: "json" };
 
@@ -10,7 +11,7 @@ const getAllUsers = (req, res, next) => {
     res.json({ users });
 };
 
-const createUser = (req, res, next) => {
+const createUser = async (req, res, next) => {
     const { errors } = validationResult(req);
 
     if (errors.length > 0) {
@@ -21,29 +22,17 @@ const createUser = (req, res, next) => {
             errors.map(({ param, msg }) => `${param} ${msg}`),
         });
     }
+    
+    const newUser = new User(req.body);
 
-    const {
-        name,
-        email,
-        password,
-    } = req.body;
-
-    const foundUser = users.find(user => user.email === email);
-
-    if (foundUser) {        
-        return res.status(200).json({
-            message: 'Email already exists.'
-        });
+    try {
+        await newUser.save()
+    } catch (error) {
+        return next(new HttpError(
+            error.errors.email.message, 
+            500
+        ));
     }
-
-    const newUser = {
-        id: uuid(),
-        name,
-        email,
-        password,
-    };
-
-    users.push(newUser);
 
     res.status(201).json({ user: newUser });
 };
