@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
 const placeSchema = new Schema({
     title: { type: String,required: true },
@@ -9,7 +9,7 @@ const placeSchema = new Schema({
         lat: { type: Number, required: true },
         lng: { type: Number, required: true }
     }, 
-    creator: { type: String,required: true }
+    creator: { type:  Types.ObjectId, required: true, ref: 'User' }
 });
 
 const Place = model('Place', placeSchema);
