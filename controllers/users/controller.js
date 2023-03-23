@@ -38,17 +38,6 @@ const createUser = async (req, res, next) => {
 };
 
 const loginUser = (req, res, next) => {
-    const { errors } = validationResult(req);
-
-    if (errors.length > 0) {
-
-        return res.status(422).json({
-            message: 'Invalid data provided.',
-            details:
-            errors.map(({ param, msg }) => `${param} ${msg}`),
-        });
-    }
-
     const { email, password } = req.body;
 
     const foundUser = users.find(user => user.email === email);
