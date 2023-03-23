@@ -89,18 +89,31 @@ const getPlaceByPlaceId = async (req, res, next) => {
     });
 }
 
-const getPlacesByUserId = (req, res, next) => {
-    const usersPlaces = 
-        places.filter(({ creator }) => creator === req.params.uid);
+const getPlacesByUserId = async (req, res, next) => {
+    let places;
 
-    if (usersPlaces.length > 0) {
-        return res.json(usersPlaces);
+    try {
+        places = await Place.find({
+            creator: req.params.uid
+        });
+
+    } catch (err) {
+        return next(
+            new HttpError(
+                'Something went wrong, please try again later.',
+                500
+            )   
+        );
+    }
+
+    if (places?.length > 0) {
+        return res.json(places.map(place => place.toObject({ getters: true })));
     }
 
     next(new HttpError(errorMsg('places', 'user'), 404));
 }
 
-const updatePlaceByPlaceId = (req, res, next) => {
+const updatePlaceByPlaceId = async (req, res, next) => {
     const { errors } = validationResult(req);
 
     if (errors.length > 0) {
@@ -112,37 +125,79 @@ const updatePlaceByPlaceId = (req, res, next) => {
         });
     }
 
-    const { pid } = req.params;
     const { title, description } = req.body;
-    const foundIndex = places.findIndex(({ id }) => id === pid)
+    let place;
 
-    if (foundIndex < 0) {
-        return next(new HttpError(errorMsg('place', 'place'), 404));
+    try {
+        place = await Place.findById(req.params.pid);
+
+    } catch (err) {
+        return next(new HttpError(
+            'Something went wrong, please try again later.',
+            500
+        ));
     }
 
-    places[foundIndex] = {
-        ...places[foundIndex],
-        title,
-        description,
-    };
+    if (!place) {
+        return next(new HttpError(
+            errorMsg('place', 'place'),
+            404
+        ));
+    }
+
+    place.title = title;
+    place.description = description;
+
+    try {
+        await place.save();
+
+    } catch (err) {
+        return next(new HttpError(
+            'Something went wrong. Please try again later.',
+            500
+        ));
+    }
 
     return res
         .status(200)
-        .json({ place: places[foundIndex] });
+        .json({ place: place.toObject({ getters: true })});
 };
 
-const deletePlaceByPlaceId = (req, res, next) => {
+const deletePlaceByPlaceId = async (req, res, next) => {
     const { pid } = req.params;
 
-    const foundPlace = places.find(({ id }) => id === pid)
+    let place;
 
-    if (!foundPlace) {
-        return next(new HttpError(errorMsg('place', 'place'), 404));
+    try {
+        place = await Place.findById(pid);
+
+    } catch (error) {
+        return (next(new HttpError(
+            'Something went wrong, please try again later.',
+            404,
+        )));        
     }
 
-    places = places.filter(({ id }) => id !== pid);
+    if (!place) {
+        return (next(new HttpError(
+            errorMsg('place', 'place'),
+            404
+        )));
+    }
 
-    return res.sendStatus(204);
+    try {
+        await Place.deleteOne({ id: place.id });
+
+    } catch (error) {
+        return (next(new HttpError(
+            'Something went wrong, please try again later.',
+            404,
+        )));   
+    }
+
+    return res
+        .status(200)
+        .json({ message: 'Place deleted' });
 };
 
 export {

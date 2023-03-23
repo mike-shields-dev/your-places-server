@@ -1,6 +1,4 @@
-import mongoose from "mongoose";
-
-const Schema = mongoose.Schema;
+import { Schema, model } from "mongoose";
 
 const placeSchema = new Schema({
     title: { type: String,required: true },
@@ -14,6 +12,6 @@ const placeSchema = new Schema({
     creator: { type: String,required: true }
 });
 
-const Place = mongoose.model('Place', placeSchema);
+const Place = model('Place', placeSchema);
 
 export default Place;
