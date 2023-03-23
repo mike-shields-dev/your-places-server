@@ -4,10 +4,6 @@ import Place from '../../models/place.js';
 import { errorMsg, HttpError } from '../../models/http-error.js';
 import { coordinatesFromAddress } from '../../util/location.js';
 
-import data from './places-data.json' assert { type: "json" };
-
-let places = data;
-
 const createPlace = async (req, res, next) => {
     const { errors } = validationResult(req);
 
