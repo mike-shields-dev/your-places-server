@@ -60,7 +60,16 @@ const createUser = async (req, res, next) => {
         await newUser.save()
 
     } catch (error) {
-        
+        const isEmailTaken = error.errors?.email;
+
+        if(isEmailTaken) {
+            return res
+                .status(200)
+                .json({
+                    message: isEmailTaken.message,
+                });
+        }
+
         return next(httpError500);
     }
 
@@ -95,7 +104,7 @@ const loginUser = async (req, res, next) => {
         );
     }
 
-    res.json({ message: 'logged in' });
+    res.json({ user: foundUser.toObject({ getters: true })});
 };
 
 export { createUser, loginUser, getAllUsers };
