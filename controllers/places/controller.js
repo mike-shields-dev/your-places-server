@@ -68,15 +68,16 @@ const createPlace = async (req, res, next) => {
 
     try {
         const session = await startSession();
-
         session.startTransaction();
 
-            await newPlace.save({session});
-            user.places.push(newPlace)
-            await user.updateOne({
-                places: user.places,
-            },
-            {session});
+        await newPlace.save({session});
+        
+        user.places.push(newPlace);
+            
+        await user.updateOne({
+            places: user.places,
+        },
+        {session});
         
         await session.commitTransaction();
 
@@ -122,12 +123,11 @@ const getPlaceByPlaceId = async (req, res, next) => {
 }
 
 const getPlacesByUserId = async (req, res, next) => {
-    let places;
+    let userWithPlaces;
 
     try {
-        places = await Place.find({
-            creator: req.params.uid
-        });
+        userWithPlaces = await User.findById(req.params.uid).populate('places');
+
 
     } catch (err) {
         return next(
@@ -138,13 +138,16 @@ const getPlacesByUserId = async (req, res, next) => {
         );
     }
 
-    if (places?.length > 0) {
-        return res.json(places.map(place => 
-            place.toObject({ getters: true })
+    if (!userWithPlaces || userWithPlaces.places.length < 1) {
+        return next(new HttpError(
+            errorMsg('places', 'user'), 
+            404
         ));
     }
 
-    next(new HttpError(errorMsg('places', 'user'), 404));
+    return res.json(userWithPlaces.places.map(place => 
+        place.toObject({ getters: true })
+    ));
 }
 
 const updatePlaceByPlaceId = async (req, res, next) => {
@@ -220,14 +223,17 @@ const deletePlaceByPlaceId = async (req, res, next) => {
     }
 
     try {
-        const session = await startSession();
+        const session = await startSession();        
+        session.startTransaction();           
+
+        await Place.deleteOne({ _id: pid }, { session });
         
-            session.startTransaction()            
-            await Place.deleteOne({ _id: pid }, { session });
-            place.creator.places.pull(place);
-            await place.creator.updateOne({
-                places: place.creator.places,
-            });
+        place.creator.places.pull(place);
+        
+        await place.creator.updateOne({
+            places: place.creator.places,
+        }, 
+        {session});
 
         await session.commitTransaction();
 
