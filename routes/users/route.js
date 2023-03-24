@@ -1,8 +1,8 @@
 import express from 'express';
 import {
     createUser,
+    loginUser,
     getAllUsers,
-    loginUser
 } from '../../controllers/users/controller.js';
 
 import {

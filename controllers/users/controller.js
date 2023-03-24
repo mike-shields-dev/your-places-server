@@ -1,21 +1,26 @@
 import { validationResult } from 'express-validator';
 
 import User from '../../models/user.js';
-import { HttpError } from '../../models/http-error.js';
+import { HttpError, httpError500 } from '../../models/http-error.js';
 
 const getAllUsers = async (req, res, next) => {
     let allUsers;
     
     try {
-        allUsers = await User.find({}, '-password');
+        allUsers = await User
+            .find({}, '-password');
+
     } catch (err) {
-        return next(new HttpError(
-            'Something went wrong, please try again.', 
-            500
-        ));
+        return next(httpError500);
     }
 
-    res.status(200).json({ users: allUsers.map(user => user.toObject({ getters: true }))});
+    return res
+        .status(200)
+        .json({ 
+            users: allUsers.map(user => 
+                user.toObject({ getters: true })
+            )
+        });
 };
 
 const createUser = async (req, res, next) => {
@@ -23,11 +28,15 @@ const createUser = async (req, res, next) => {
 
     if (errors.length > 0) {
 
-        return res.status(422).json({
-            message: 'Invalid data provided.',
-            details:
-                errors.map(({ param, msg }) => `${param} ${msg}`),
-        });
+        return res
+            .status(422)
+            .json({
+                message: 'Invalid data provided.',
+                details: errors.map(
+                    ({ param, msg }) => 
+                    `${param} ${msg}`
+                ),
+            });
     }
 
     const {
@@ -36,8 +45,6 @@ const createUser = async (req, res, next) => {
         password,
         image,
     } = req.body;
-
-    console.log(name);
 
     const user = new User({
         name, 
@@ -51,14 +58,17 @@ const createUser = async (req, res, next) => {
 
     try {
         await newUser.save()
+
     } catch (error) {
-        return next(new HttpError(
-            error.errors.email.message,
-            500
-        ));
+        
+        return next(httpError500);
     }
 
-    res.status(201).json({ user: newUser.toObject({ getters: true })});
+    return res
+        .status(201)
+        .json({ 
+            user: newUser.toObject({ getters: true })
+        });
 };
 
 const loginUser = async (req, res, next) => {
@@ -70,17 +80,19 @@ const loginUser = async (req, res, next) => {
         foundUser = await User.findOne({ email });
 
     } catch (error) {
-        return next(new HttpError(
-            'User not found, please register.'), 
-            500
-        );
+        
+        return next(httpError500);
     }
 
-    if (!foundUser || foundUser.password !== password) {
-        return next(new HttpError(
-            'Could not identify user.', 
-            401
-        ));
+    if (!foundUser || 
+        foundUser.password !== password
+    ) {
+        return next(
+            new HttpError(
+                'Could not identify user.', 
+                401
+            )
+        );
     }
 
     res.json({ message: 'logged in' });

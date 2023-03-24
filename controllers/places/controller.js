@@ -6,17 +6,22 @@ import User from '../../models/user.js';
 
 import { errorMsg, HttpError } from '../../models/http-error.js';
 import { coordinatesFromAddress } from '../../util/location.js';
+import { httpError500 } from '../../models/http-error.js';
+
 
 const createPlace = async (req, res, next) => {
     const { errors } = validationResult(req);
 
     if (errors.length > 0) {
 
-        return res.status(422).json({
-            message: 'Invalid data provided.',
-            details:
-                errors.map(({ param, msg }) => `${param} ${msg}`),
-        });
+        return res
+            .status(422).json({
+                message: 'Invalid data provided.',
+                details: errors.map(
+                    ({ param, msg }) =>
+                        `${param} ${msg}`
+                )
+            });
     }
 
     const {
@@ -29,22 +34,22 @@ const createPlace = async (req, res, next) => {
     let user;
 
     try {
-        user = await User.findById(creator);
+        user = await User
+            .findById(creator);
 
     } catch (error) {
 
-        return next(new HttpError(
-            errorMsg('user', 'user'),
-            500
-        ));  
+        return next(httpError500);
     }
 
-    if(!user) {
+    if (!user) {
 
-        return next(new HttpError(
-            errorMsg('user', 'user'), 
-            404
-        ));
+        return next(
+            new HttpError(
+                errorMsg('user', 'user'),
+                404
+            )
+        );
     }
 
     let coordinates;
@@ -61,7 +66,7 @@ const createPlace = async (req, res, next) => {
         title,
         description,
         location: coordinates,
-        creator, 
+        creator,
         address,
         image: 'https://placehold.co/400',
     });
@@ -70,44 +75,118 @@ const createPlace = async (req, res, next) => {
         const session = await startSession();
         session.startTransaction();
 
-        await newPlace.save({session});
-        
+        await newPlace.save({ session });
+
         user.places.push(newPlace);
-            
+
         await user.updateOne({
             places: user.places,
         },
-        {session});
-        
+            { session });
+
         await session.commitTransaction();
 
     } catch (err) {
 
-        return next(
-            new HttpError('Failed to save place, please try again.', 500)
-        );
+        return next(httpError500);
     }
 
-    res.status(201).json({ place: newPlace.toObject({ getters: true })});
+    return res
+        .status(201)
+        .json({
+            place: newPlace.toObject({ getters: true })
+        });
 };
 
 const getPlaceByPlaceId = async (req, res, next) => {
     let place;
-    
+
     try {
         place = await Place.findById(
             req.params.pid
         );
-            
+
     } catch (err) {
+
+        return next(httpError500);
+    }
+
+    if (!place) {
+
         return next(
             new HttpError(
-                'Something went wrong with the database query.',
-                500
+                errorMsg('place', 'place'),
+                404
             )
         );
     }
-    
+
+    return res
+        .json({
+            place: place.toObject({ getters: true })
+        });
+}
+
+const getPlacesByUserId = async (req, res, next) => {
+    let userWithPlaces;
+
+    try {
+        userWithPlaces = await User
+            .findById(req.params.uid)
+            .populate('places');
+
+
+    } catch (err) {
+
+        return next(httpError500);
+    }
+
+    if (!userWithPlaces ||
+        userWithPlaces.places.length < 1
+    ) {
+
+        return next(
+            new HttpError(
+                errorMsg('places', 'user'),
+                404
+            )
+        );
+    }
+
+    return res.json(
+        userWithPlaces.places
+            .map(place => place.toObject({ getters: true })
+            )
+    );
+}
+
+const updatePlaceByPlaceId = async (req, res, next) => {
+    const { errors } = validationResult(req);
+
+    if (errors.length > 0) {
+
+        return res
+            .status(422)
+            .json({
+                message: 'Invalid data provided.',
+                details: errors.map(
+                    ({ param, msg }) =>
+                        `${param} ${msg}`
+                ),
+            });
+    }
+
+    const { title, description } = req.body;
+    let place;
+
+    try {
+        place = await Place
+            .findById(req.params.pid);
+
+    } catch (err) {
+        return next(httpError500);
+    }
+
     if (!place) {
         return next(
             new HttpError(
@@ -117,71 +196,6 @@ const getPlaceByPlaceId = async (req, res, next) => {
         );
     }
 
-    return res.json({
-        place: place.toObject({ getters: true })
-    });
-}
-
-const getPlacesByUserId = async (req, res, next) => {
-    let userWithPlaces;
-
-    try {
-        userWithPlaces = await User.findById(req.params.uid).populate('places');
-
-
-    } catch (err) {
-        return next(
-            new HttpError(
-                'Something went wrong, please try again later.',
-                500
-            )   
-        );
-    }
-
-    if (!userWithPlaces || userWithPlaces.places.length < 1) {
-        return next(new HttpError(
-            errorMsg('places', 'user'), 
-            404
-        ));
-    }
-
-    return res.json(userWithPlaces.places.map(place => 
-        place.toObject({ getters: true })
-    ));
-}
-
-const updatePlaceByPlaceId = async (req, res, next) => {
-    const { errors } = validationResult(req);
-
-    if (errors.length > 0) {
-
-        return res.status(422).json({
-            message: 'Invalid data provided.',
-            details:
-                errors.map(({ param, msg }) => `${param} ${msg}`),
-        });
-    }
-
-    const { title, description } = req.body;
-    let place;
-
-    try {
-        place = await Place.findById(req.params.pid);
-
-    } catch (err) {
-        return next(new HttpError(
-            'Something went wrong, please try again later.',
-            500
-        ));
-    }
-
-    if (!place) {
-        return next(new HttpError(
-            errorMsg('place', 'place'),
-            404
-        ));
-    }
-
     place.title = title;
     place.description = description;
 
@@ -189,15 +203,15 @@ const updatePlaceByPlaceId = async (req, res, next) => {
         await place.save();
 
     } catch (err) {
-        return next(new HttpError(
-            'Something went wrong. Please try again later.',
-            500
-        ));
+
+        return next(httpError500);
     }
 
     return res
         .status(200)
-        .json({ place: place.toObject({ getters: true })});
+        .json({
+            place: place.toObject({ getters: true })
+        });
 };
 
 const deletePlaceByPlaceId = async (req, res, next) => {
@@ -206,43 +220,40 @@ const deletePlaceByPlaceId = async (req, res, next) => {
     let place;
 
     try {
-        place = await Place.findById(pid).populate('creator');
+        place = await Place
+            .findById(pid)
+            .populate('creator');
 
     } catch (error) {
-        return (next(new HttpError(
-            'Something went wrong, please try again later.',
-            500,
-        )));        
+        return next(httpError500);
     }
 
     if (!place) {
-        return (next(new HttpError(
-            errorMsg('place', 'place'),
-            404
-        )));
+        return next(
+            new HttpError(
+                errorMsg('place', 'place'),
+                404
+            )
+        );
     }
 
     try {
-        const session = await startSession();        
-        session.startTransaction();           
+        const session = await startSession();
+        session.startTransaction();
 
         await Place.deleteOne({ _id: pid }, { session });
-        
+
         place.creator.places.pull(place);
-        
+
         await place.creator.updateOne({
             places: place.creator.places,
-        }, 
-        {session});
+        },
+            { session });
 
         await session.commitTransaction();
 
     } catch (error) {
-        console.log(error)
-        return (next(new HttpError(
-            'Something went wrong, please try again later.',
-            404,
-        )));   
+        return next(httpError500);
     }
 
     return res

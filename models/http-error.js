@@ -5,7 +5,12 @@ class HttpError extends Error{
     }
 }
 
+const httpError500 = new HttpError(
+    'Something went wrong, please try again.', 
+    500
+);
+
 const errorMsg = (resource, idType) =>
     `No ${resource} found for the provided ${idType} ID.`; 
 
-export { HttpError, errorMsg };
+export { HttpError, errorMsg, httpError500 };

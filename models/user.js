@@ -2,6 +2,7 @@ import { Schema, model, Types } from "mongoose";
 
 async function isEmailTaken(email) {
     const user = await this.constructor.findOne({ email });
+    
     return !user;
 }
 
