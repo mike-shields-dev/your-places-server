@@ -27,16 +27,12 @@ const createUser = async (req, res, next) => {
     const { errors } = validationResult(req);
 
     if (errors.length > 0) {
-
-        return res
-            .status(422)
-            .json({
-                message: 'Invalid data provided.',
-                details: errors.map(
-                    ({ param, msg }) => 
-                    `${param} ${msg}`
-                ),
-            });
+        return next(
+            new HttpError(
+                `Invalid data provided, please check your data.`,
+                422,
+            )
+        );
     }
 
     const {
@@ -45,6 +41,24 @@ const createUser = async (req, res, next) => {
         password,
         image,
     } = req.body;
+
+    let existingUser;
+    
+    try {
+        existingUser = await User.findOne({ email });
+
+    } catch (error) {
+        return next(httpError500);
+    }
+
+    if(existingUser) {
+        return next(
+            new HttpError(
+                'User already exists, please login instead.',
+                422,
+            )
+        )
+    }
 
     const user = new User({
         name, 
@@ -57,20 +71,15 @@ const createUser = async (req, res, next) => {
     const newUser = new User(user);
 
     try {
-        await newUser.save()
+        await newUser.save();
 
     } catch (error) {
-        const isEmailTaken = error.errors?.email;
-
-        if(isEmailTaken) {
-            return res
-                .status(200)
-                .json({
-                    message: isEmailTaken.message,
-                });
-        }
-
-        return next(httpError500);
+        
+        return next(
+            new HttpError(
+                'Sign up failed. Please try again.'
+            )
+        )
     }
 
     return res

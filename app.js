@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import fs from 'fs';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -25,6 +26,13 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
+    if(req.file) {
+        fs.unlink(req.file.path, (error) => {
+            if(error) {
+                console.trace(error);
+            }
+        });
+    }
     if (res.headerSent) {
         return next(error);
     }
@@ -49,7 +57,7 @@ mongoose
     })
     .then(
         app.listen(
-            PORT, () => console.log(`App is listening on ${PORT}`)
+            PORT, () => console.trace(`App is listening on ${PORT}`)
         )
     )
-    .catch(err => console.log(err));
+    .catch(err => console.trace(err));
