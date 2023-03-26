@@ -1,5 +1,6 @@
 import { config } from 'dotenv';
 import fs from 'fs';
+import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -17,6 +18,7 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/uploads/images', express.static(path.join('uploads', 'images')))
 
 app.use('/api/places', placesRoute);
 app.use('/api/users', usersRoute);
