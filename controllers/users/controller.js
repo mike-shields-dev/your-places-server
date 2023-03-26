@@ -64,7 +64,7 @@ const createUser = async (req, res, next) => {
         name, 
         email, 
         password,
-        image: image || 'https://api.multiavatar.com/Binx Bond.png',
+        image: req.file.path,
         places: [],
     });
 
