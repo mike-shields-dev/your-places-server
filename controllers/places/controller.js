@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { validationResult } from 'express-validator';
 import { startSession } from 'mongoose';
 
@@ -237,6 +239,8 @@ const deletePlaceByPlaceId = async (req, res, next) => {
         );
     }
 
+    const imagePath = place.image;
+
     try {
         const session = await startSession();
         session.startTransaction();
@@ -255,6 +259,12 @@ const deletePlaceByPlaceId = async (req, res, next) => {
     } catch (error) {
         return next(httpError500);
     }
+
+    fs.unlink(imagePath, (err) => {
+        if(err) {
+            console.log(err);
+        }
+    });
 
     return res
         .status(200)
