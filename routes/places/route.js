@@ -9,9 +9,11 @@ import {
     deletePlaceByPlaceId, 
 } from '../../controllers/places/controller.js';
 
+import { fileUpload } from '../../middleware/file-upload.js';
+
 const router = express.Router();
 
-router.post('/', validateCreatePlace(), createPlace);
+router.post('/', fileUpload.single('image'), validateCreatePlace(), createPlace);
 
 router.get('/:pid', getPlaceByPlaceId);
 

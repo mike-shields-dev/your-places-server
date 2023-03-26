@@ -68,7 +68,7 @@ const createPlace = async (req, res, next) => {
         location: coordinates,
         creator,
         address,
-        image: 'https://placehold.co/400',
+        image: req.file.path,
     });
 
     try {
